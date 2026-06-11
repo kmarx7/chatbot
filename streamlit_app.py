@@ -129,11 +129,44 @@ st.markdown("""
     
     /* Center the app layout with a max-width */
     .block-container {
-        max-width: 920px !important;
+        max-width: 1040px !important;
         padding-top: 2.5rem !important;
         padding-bottom: 7rem !important;
         margin: 0 auto !important;
     }
+
+    /* Style for the info panel on the side */
+    .info-card {
+        background: rgba(255, 255, 255, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(16px) !important;
+        border-radius: 24px !important;
+        padding: 24px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03) !important;
+        margin-top: 15px !important;
+        transition: all 0.3s ease !important;
+    }
+    .info-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 15px 35px rgba(255, 107, 107, 0.08) !important;
+        border-color: rgba(255, 107, 107, 0.3) !important;
+    }
+    .info-title {
+        font-size: 1.15rem !important;
+        font-weight: 700 !important;
+        color: #ff6b6b !important;
+        margin-bottom: 0.8rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    .info-text {
+        font-size: 0.9rem !important;
+        line-height: 1.6 !important;
+        color: #4b5563 !important;
+        word-break: keep-all !important;
+    }
+
     
     /* Style the unified chat container box: frosted glass */
     [data-testid="stVerticalBlockBorderWrapper"] {
@@ -744,10 +777,25 @@ def run_llm_stream(provider, model, messages, temperature, max_tokens, api_key, 
 # ==========================================
 # 9. CONVERSATION VIEW & AUDIO OUTPUT
 # ==========================================
-st.markdown("### 💬 대화 피드")
+chat_col, info_col = st.columns([7.2, 2.8], gap="large")
 
-# Create a unified container for the chat history
-chat_box = st.container(border=True)
+with chat_col:
+    st.markdown("### 💬 대화 피드")
+
+with info_col:
+    st.markdown('<div style="margin-top: 55px;"></div>', unsafe_allow_html=True)  # Spacer to align with chat container
+    st.markdown("""
+    <div class="info-card">
+        <div class="info-title">🖼️ 안내</div>
+        <div class="info-text" style="font-weight: 500;">
+            혹시 궁금하거나 가고 싶은 곳의 사진이 있다면 아래 🖼️ 버튼을 눌러 나에게 보여줘!<br><br>바로 찾아줄게!
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Create a unified container for the chat history inside chat_col
+with chat_col:
+    chat_box = st.container(border=True)
 
 with chat_box:
     for idx, msg in enumerate(st.session_state.messages):
@@ -885,84 +933,85 @@ def on_text_submit():
     if val:
         st.session_state.temp_prompt = val
 
-st.markdown("---")
-st.markdown("💬 **하루에게 질문하기**")
+with chat_col:
+    st.markdown("---")
+    st.markdown("💬 **하루에게 질문하기**")
 
-# Text bar layout with columns: text_input (5), photo_btn (0.8), voice_btn (0.8), submit_btn (1.2)
-col1, col2, col3, col4 = st.columns([5, 0.8, 0.8, 1.2])
-with col1:
-    input_val = st.text_input(
-        "메시지 입력",
-        placeholder="원하는 기분, 장소, 동행인을 질문하거나 사진을 업로드해 보세요...",
-        label_visibility="collapsed",
-        key="text_input_key",
-        on_change=on_text_submit
-    )
-with col2:
-    photo_btn_label = "❌" if st.session_state.get("show_photo_uploader", False) else "🖼️"
-    photo_clicked = st.button(photo_btn_label, use_container_width=True, help="사진 업로드 켜기/끄기")
-with col3:
-    voice_btn_label = "❌" if st.session_state.get("show_voice_recorder", False) else "🎙️"
-    voice_clicked = st.button(voice_btn_label, use_container_width=True, help="음성 입력 켜기/끄기")
-with col4:
-    st.button("전송", use_container_width=True, on_click=on_btn_submit)
+    # Text bar layout with columns: text_input (5), photo_btn (0.8), voice_btn (0.8), submit_btn (1.2)
+    col1, col2, col3, col4 = st.columns([5, 0.8, 0.8, 1.2])
+    with col1:
+        input_val = st.text_input(
+            "메시지 입력",
+            placeholder="원하는 기분, 장소, 동행인을 질문하거나 사진을 업로드해 보세요...",
+            label_visibility="collapsed",
+            key="text_input_key",
+            on_change=on_text_submit
+        )
+    with col2:
+        photo_btn_label = "❌" if st.session_state.get("show_photo_uploader", False) else "🖼️"
+        photo_clicked = st.button(photo_btn_label, use_container_width=True, help="사진 업로드 켜기/끄기")
+    with col3:
+        voice_btn_label = "❌" if st.session_state.get("show_voice_recorder", False) else "🎙️"
+        voice_clicked = st.button(voice_btn_label, use_container_width=True, help="음성 입력 켜기/끄기")
+    with col4:
+        st.button("전송", use_container_width=True, on_click=on_btn_submit)
 
-# Toggle photo uploader visibility
-if photo_clicked:
-    st.session_state.show_photo_uploader = not st.session_state.get("show_photo_uploader", False)
-    st.session_state.show_voice_recorder = False
-    st.rerun()
+    # Toggle photo uploader visibility
+    if photo_clicked:
+        st.session_state.show_photo_uploader = not st.session_state.get("show_photo_uploader", False)
+        st.session_state.show_voice_recorder = False
+        st.rerun()
 
-# Toggle voice recorder visibility
-if voice_clicked:
-    st.session_state.show_voice_recorder = not st.session_state.get("show_voice_recorder", False)
-    st.session_state.show_photo_uploader = False
-    st.rerun()
+    # Toggle voice recorder visibility
+    if voice_clicked:
+        st.session_state.show_voice_recorder = not st.session_state.get("show_voice_recorder", False)
+        st.session_state.show_photo_uploader = False
+        st.rerun()
 
-# Display photo uploader below the bar if enabled
-if st.session_state.get("show_photo_uploader", False):
-    st.markdown("🖼️ **장소 사진 올리기**")
-    uploaded_photo = st.file_uploader(
-        "여기에 이미지를 드래그하거나 클릭하여 업로드해 주세요 (PNG, JPG, JPEG)",
-        type=["png", "jpg", "jpeg"],
-        label_visibility="collapsed",
-        key=f"photo_uploader_{st.session_state.file_uploader_id}"
-    )
-    if uploaded_photo:
-        st.session_state.pending_photo = uploaded_photo.read()
-        st.session_state.pending_photo_mime = uploaded_photo.type
-        st.image(st.session_state.pending_photo, caption="업로드된 이미지 미리보기", width=250)
-        if st.button("❌ 사진 삭제", key="clear_photo"):
-            st.session_state.pending_photo = None
-            st.session_state.pending_photo_mime = None
-            st.session_state.file_uploader_id += 1
-            st.rerun()
+    # Display photo uploader below the bar if enabled
+    if st.session_state.get("show_photo_uploader", False):
+        st.markdown("🖼️ **장소 사진 올리기**")
+        uploaded_photo = st.file_uploader(
+            "여기에 이미지를 드래그하거나 클릭하여 업로드해 주세요 (PNG, JPG, JPEG)",
+            type=["png", "jpg", "jpeg"],
+            label_visibility="collapsed",
+            key=f"photo_uploader_{st.session_state.file_uploader_id}"
+        )
+        if uploaded_photo:
+            st.session_state.pending_photo = uploaded_photo.read()
+            st.session_state.pending_photo_mime = uploaded_photo.type
+            st.image(st.session_state.pending_photo, caption="업로드된 이미지 미리보기", width=250)
+            if st.button("❌ 사진 삭제", key="clear_photo"):
+                st.session_state.pending_photo = None
+                st.session_state.pending_photo_mime = None
+                st.session_state.file_uploader_id += 1
+                st.rerun()
 
-# Display voice recorder below the bar if enabled
-if st.session_state.get("show_voice_recorder", False):
-    st.markdown("🎙️ **음성 질문 녹음하기**")
-    audio_value = st.audio_input("여기에 목소리를 녹음해 주세요", label_visibility="collapsed")
-    if audio_value:
-        audio_bytes = audio_value.read()
-        audio_hash = hash(audio_bytes)
-        if st.session_state.last_audio_hash != audio_hash:
-            st.session_state.last_audio_hash = audio_hash
-            if provider == "OpenAI" and api_key:
-                with st.spinner("음성을 텍스트로 인식 중..."):
-                    try:
-                        from openai import OpenAI
-                        stt_client = OpenAI(api_key=api_key)
-                        transcription = stt_client.audio.transcriptions.create(
-                            model="whisper-1",
-                            file=("audio.wav", audio_bytes, "audio/wav")
-                        )
-                        user_prompt = transcription.text
-                        st.toast(f"🎙️ 인식된 텍스트: \"{user_prompt}\"")
-                        st.session_state.show_voice_recorder = False
-                    except Exception as e:
-                        st.error(f"음성 STT 에러: {e}")
-            else:
-                st.warning("음성 인식을 하려면 프로바이더를 OpenAI로 선택하고 API Key를 등록해야 합니다.")
+    # Display voice recorder below the bar if enabled
+    if st.session_state.get("show_voice_recorder", False):
+        st.markdown("🎙️ **음성 질문 녹음하기**")
+        audio_value = st.audio_input("여기에 목소리를 녹음해 주세요", label_visibility="collapsed")
+        if audio_value:
+            audio_bytes = audio_value.read()
+            audio_hash = hash(audio_bytes)
+            if st.session_state.last_audio_hash != audio_hash:
+                st.session_state.last_audio_hash = audio_hash
+                if provider == "OpenAI" and api_key:
+                    with st.spinner("음성을 텍스트로 인식 중..."):
+                        try:
+                            from openai import OpenAI
+                            stt_client = OpenAI(api_key=api_key)
+                            transcription = stt_client.audio.transcriptions.create(
+                                model="whisper-1",
+                                file=("audio.wav", audio_bytes, "audio/wav")
+                            )
+                            user_prompt = transcription.text
+                            st.toast(f"🎙️ 인식된 텍스트: \"{user_prompt}\"")
+                            st.session_state.show_voice_recorder = False
+                        except Exception as e:
+                            st.error(f"음성 STT 에러: {e}")
+                else:
+                    st.warning("음성 인식을 하려면 프로바이더를 OpenAI로 선택하고 API Key를 등록해야 합니다.")
 
 # Check for temp_prompt from callback
 if st.session_state.get("temp_prompt") is not None:
