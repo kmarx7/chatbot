@@ -5,8 +5,8 @@ import streamlit as st
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
-load_dotenv(".env.local")
+load_dotenv(override=True)
+load_dotenv(".env.local", override=True)
 
 # Attempt imports with fallback grace
 try:
