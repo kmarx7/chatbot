@@ -879,11 +879,15 @@ def on_btn_submit():
     val = st.session_state.get("text_input_key", "").strip()
     if val or st.session_state.get("pending_photo") is not None:
         st.session_state.temp_prompt = val
+        if "text_input_key" in st.session_state:
+            st.session_state.text_input_key = ""
 
 def on_text_submit():
     val = st.session_state.get("text_input_key", "").strip()
     if val:
         st.session_state.temp_prompt = val
+        if "text_input_key" in st.session_state:
+            st.session_state.text_input_key = ""
 
 st.markdown("---")
 st.markdown("💬 **하루에게 질문하기**")
@@ -968,8 +972,6 @@ if st.session_state.get("show_voice_recorder", False):
 if st.session_state.get("temp_prompt") is not None:
     user_prompt = st.session_state.temp_prompt
     st.session_state.temp_prompt = None
-    if "text_input_key" in st.session_state:
-        st.session_state.text_input_key = ""
 
 # Check for starter prompt selection
 if "starter_prompt" in st.session_state and st.session_state.starter_prompt:
