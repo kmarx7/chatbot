@@ -809,7 +809,7 @@ if st.session_state.generate_response and st.session_state.current_prompt:
     st.session_state.generate_response = False
     
     if provider in ["OpenAI", "Anthropic", "Google Gemini"] and not api_key:
-        st.info(f"계속하려면 사이드바에서 {provider} API Key를 입력해주세요.", icon="🗝️")
+        st.info(f"계속하려면 우측 상단의 '⚙️ 설정 및 모델 선택'에서 {provider} API Key를 입력해주세요.", icon="🗝️")
     else:
         with chat_box:
             # Generate Assistant response bubble inside the same container
