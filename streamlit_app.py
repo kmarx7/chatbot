@@ -687,6 +687,8 @@ if "pending_photo_mime" not in st.session_state:
     st.session_state.pending_photo_mime = None
 if "temp_prompt" not in st.session_state:
     st.session_state.temp_prompt = None
+if "file_uploader_id" not in st.session_state:
+    st.session_state.file_uploader_id = 0
 
 # Callbacks for submit
 def on_btn_submit():
@@ -741,7 +743,8 @@ if st.session_state.get("show_photo_uploader", False):
     uploaded_photo = st.file_uploader(
         "여기에 이미지를 드래그하거나 클릭하여 업로드해 주세요 (PNG, JPG, JPEG)",
         type=["png", "jpg", "jpeg"],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        key=f"photo_uploader_{st.session_state.file_uploader_id}"
     )
     if uploaded_photo:
         st.session_state.pending_photo = uploaded_photo.read()
@@ -750,6 +753,7 @@ if st.session_state.get("show_photo_uploader", False):
         if st.button("❌ 사진 삭제", key="clear_photo"):
             st.session_state.pending_photo = None
             st.session_state.pending_photo_mime = None
+            st.session_state.file_uploader_id += 1
             st.rerun()
 
 # Display voice recorder below the bar if enabled
@@ -808,6 +812,7 @@ if user_prompt is not None or st.session_state.pending_photo is not None:
         st.session_state.pending_photo = None
         st.session_state.pending_photo_mime = None
         st.session_state.show_photo_uploader = False
+        st.session_state.file_uploader_id += 1
 
     # Prevent sending image to text-only model
     is_multimodal = False
