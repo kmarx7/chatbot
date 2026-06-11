@@ -169,15 +169,36 @@ if "generate_response" not in st.session_state:
 if "current_prompt" not in st.session_state:
     st.session_state.current_prompt = None
 
+def is_placeholder(key):
+    if not key:
+        return True
+    k_lower = key.lower()
+    return "your_" in k_lower or "api_key_here" in k_lower or "placeholder" in k_lower
+
 def get_secret_safe(key, default=""):
     try:
-        return st.secrets.get(key, default)
+        val = st.secrets.get(key, default)
+        return default if is_placeholder(val) else val
     except Exception:
         return default
 
-openai_api_key_env = os.getenv("OPENAI_API_KEY") or get_secret_safe("OPENAI_API_KEY", "")
-anthropic_api_key_env = os.getenv("ANTHROPIC_API_KEY") or get_secret_safe("ANTHROPIC_API_KEY", "")
-gemini_api_key_env = os.getenv("GEMINI_API_KEY") or get_secret_safe("GEMINI_API_KEY", "")
+openai_api_key_env = os.getenv("OPENAI_API_KEY")
+if is_placeholder(openai_api_key_env):
+    openai_api_key_env = ""
+if not openai_api_key_env:
+    openai_api_key_env = get_secret_safe("OPENAI_API_KEY", "")
+
+anthropic_api_key_env = os.getenv("ANTHROPIC_API_KEY")
+if is_placeholder(anthropic_api_key_env):
+    anthropic_api_key_env = ""
+if not anthropic_api_key_env:
+    anthropic_api_key_env = get_secret_safe("ANTHROPIC_API_KEY", "")
+
+gemini_api_key_env = os.getenv("GEMINI_API_KEY")
+if is_placeholder(gemini_api_key_env):
+    gemini_api_key_env = ""
+if not gemini_api_key_env:
+    gemini_api_key_env = get_secret_safe("GEMINI_API_KEY", "")
 
 # ==========================================
 # 3. HEADER & SETTINGS LAYOUT (Top right placement)
