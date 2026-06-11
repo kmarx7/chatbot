@@ -36,53 +36,66 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* Warm, Emotional & Premium radial gradient background */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Pretendard:wght@300;400;600;800&display=swap');
+
+    /* Warm, Emotional & Premium animated gradient background */
     .stApp {
-        background: radial-gradient(circle at 80% 20%, rgba(245, 230, 220, 0.45), transparent 50%),
-                    radial-gradient(circle at 20% 80%, rgba(225, 238, 230, 0.45), transparent 50%);
+        background: radial-gradient(circle at 90% 10%, rgba(255, 126, 95, 0.12), transparent 45%),
+                    radial-gradient(circle at 10% 90%, rgba(122, 220, 180, 0.1), transparent 45%),
+                    radial-gradient(circle at 50% 50%, rgba(248, 246, 242, 0.5), transparent 60%);
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     }
     
-    /* Premium Title Header */
+    /* Premium Title Header with elegant multi-color gradient */
     .main-header {
-        background: linear-gradient(135deg, #d97706, #be123c);
+        background: linear-gradient(135deg, #ff6b6b, #ff8e53, #7209b7);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-weight: 900;
-        font-size: 3.2rem;
-        margin-bottom: 0.2rem;
+        font-family: 'Outfit', 'Pretendard', sans-serif;
+        font-weight: 800;
+        font-size: 3.4rem;
+        margin-bottom: 0.3rem;
         text-align: center;
-        letter-spacing: -0.04em;
+        letter-spacing: -0.05em;
+        filter: drop-shadow(0px 2px 10px rgba(255,107,107,0.1));
     }
     
     .sub-header {
-        font-size: 1.25rem;
-        color: #4b5563;
+        font-size: 1.15rem;
+        color: #64748b;
         text-align: center;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2.2rem;
         font-weight: 500;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
+        font-family: 'Pretendard', sans-serif;
     }
 
     /* Enhancing chat bubbles to feel premium and warm */
     [data-testid="stChatMessage"] {
-        border-radius: 18px !important;
-        padding: 14px 18px !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-        margin-bottom: 12px !important;
+        border-radius: 20px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        margin-bottom: 14px !important;
         display: flex !important;
         width: fit-content !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    [data-testid="stChatMessage"]:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
     }
 
-    /* User message styling: vibrant blue, aligned right */
+    /* User message styling: vibrant premium sunset gradient, aligned right */
     [data-testid="stChatMessage"][data-testid="stChatMessage-user"] {
-        background-color: #0f8df4 !important; /* Vibrant Messenger Blue */
+        background: linear-gradient(135deg, #ff7b00, #ff007b) !important; /* Premium sunset gradient */
         border: none !important;
         color: white !important;
         margin-left: auto !important;
         max-width: 75% !important;
         flex-direction: row-reverse !important;
-        border-radius: 18px 18px 2px 18px !important;
+        border-radius: 20px 20px 4px 20px !important;
+        box-shadow: 0 4px 15px rgba(255, 0, 123, 0.15) !important;
     }
     
     /* Force user message text elements to be white */
@@ -96,75 +109,96 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Assistant message styling: soft gray, aligned left */
+    /* Assistant message styling: frosted glassmorphism, aligned left */
     [data-testid="stChatMessage"][data-testid="stChatMessage-assistant"] {
-        background-color: #f1f5f9 !important; /* Soft Slate/Grey */
-        border: 1px solid #e2e8f0 !important;
-        color: #0f172a !important;
+        background: rgba(255, 255, 255, 0.85) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(12px) !important;
+        color: #1e293b !important;
         margin-right: auto !important;
         max-width: 85% !important;
-        border-radius: 18px 18px 18px 2px !important;
+        border-radius: 20px 20px 20px 4px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
     }
     
     /* Center the app layout with a max-width */
     .block-container {
-        max-width: 900px !important;
-        padding-top: 3rem !important;
-        padding-bottom: 8rem !important;
+        max-width: 920px !important;
+        padding-top: 2.5rem !important;
+        padding-bottom: 7rem !important;
         margin: 0 auto !important;
     }
     
-    /* Style the unified chat container box */
+    /* Style the unified chat container box: frosted glass */
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: rgba(255, 255, 255, 0.5) !important;
-        border: 1px solid rgba(217, 119, 6, 0.12) !important;
-        border-radius: 24px !important;
+        background: rgba(255, 255, 255, 0.45) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: 28px !important;
         padding: 24px !important;
-        box-shadow: 0 10px 30px rgba(217, 119, 6, 0.04) !important;
-        backdrop-filter: blur(10px) !important;
+        box-shadow: 0 15px 35px rgba(31, 38, 135, 0.04) !important;
+        backdrop-filter: blur(16px) !important;
         margin-top: 15px !important;
     }
     
     /* Sidebar text input borders */
     .stTextInput>div>div>input {
-        border-radius: 10px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        padding: 10px 14px !important;
+        transition: all 0.2s ease !important;
+    }
+    .stTextInput>div>div>input:focus {
+        border-color: #ff007b !important;
+        box-shadow: 0 0 0 3px rgba(255, 0, 123, 0.1) !important;
     }
 
     /* Expander styling */
     .streamlit-expanderHeader {
-        background-color: rgba(217, 119, 6, 0.03) !important;
-        border: 1px solid rgba(217, 119, 6, 0.08) !important;
-        border-radius: 10px !important;
-        padding: 10px !important;
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        border-radius: 14px !important;
+        padding: 12px !important;
+        font-weight: 600 !important;
+        backdrop-filter: blur(8px) !important;
+        transition: all 0.2s ease !important;
+    }
+    .streamlit-expanderHeader:hover {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border-color: rgba(0, 0, 0, 0.1) !important;
     }
     
-    /* Redefining buttons to match warm café / museum ticket aesthetics */
+    /* Redefining buttons to match premium aesthetics */
     .stButton > button {
         border-radius: 16px !important;
-        border: 1px solid rgba(217, 119, 6, 0.18) !important;
-        background-color: white !important;
-        color: #4b5563 !important;
-        padding: 14px 22px !important;
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+        background: linear-gradient(135deg, #ffffff, #f8fafc) !important;
+        color: #334155 !important;
+        padding: 12px 20px !important;
         font-weight: 600 !important;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.02) !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        text-align: left !important;
-        line-height: 1.4 !important;
         height: auto !important;
     }
     .stButton > button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px rgba(217, 119, 6, 0.15) !important;
-        border-color: #d97706 !important;
-        color: #d97706 !important;
-        background-color: #fdfcf7 !important;
+        box-shadow: 0 10px 20px rgba(255, 0, 123, 0.12) !important;
+        border-color: #ff007b !important;
+        color: #ff007b !important;
+        background: #ffffff !important;
     }
     
-    /* Input field styling */
+    /* Chat input styling */
     .stChatInputContainer {
-        border-radius: 20px !important;
-        border: 1px solid rgba(217, 119, 6, 0.18) !important;
-        background-color: white !important;
+        border-radius: 24px !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
+        backdrop-filter: blur(10px) !important;
+        transition: all 0.2s ease !important;
+    }
+    .stChatInputContainer:focus-within {
+        border-color: #ff007b !important;
+        box-shadow: 0 8px 32px rgba(255, 0, 123, 0.1) !important;
     }
 </style>
 """, unsafe_allow_html=True)
