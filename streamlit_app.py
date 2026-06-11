@@ -66,23 +66,44 @@ st.markdown("""
 
     /* Enhancing chat bubbles to feel premium and warm */
     [data-testid="stChatMessage"] {
-        border-radius: 20px !important;
-        padding: 22px !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-        margin-bottom: 18px !important;
+        border-radius: 18px !important;
+        padding: 14px 18px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+        margin-bottom: 12px !important;
+        display: flex !important;
+        width: fit-content !important;
     }
 
-    /* User message styling: soft beige accent */
+    /* User message styling: vibrant blue, aligned right */
     [data-testid="stChatMessage"][data-testid="stChatMessage-user"] {
-        background-color: rgba(217, 119, 6, 0.07) !important;
-        border: 1px solid rgba(217, 119, 6, 0.15) !important;
+        background-color: #0f8df4 !important; /* Vibrant Messenger Blue */
+        border: none !important;
+        color: white !important;
+        margin-left: auto !important;
+        max-width: 75% !important;
+        flex-direction: row-reverse !important;
+        border-radius: 18px 18px 2px 18px !important;
+    }
+    
+    /* Force user message text elements to be white */
+    [data-testid="stChatMessage"][data-testid="stChatMessage-user"] p,
+    [data-testid="stChatMessage"][data-testid="stChatMessage-user"] span,
+    [data-testid="stChatMessage"][data-testid="stChatMessage-user"] div,
+    [data-testid="stChatMessage"][data-testid="stChatMessage-user"] label,
+    [data-testid="stChatMessage"][data-testid="stChatMessage-user"] h1,
+    [data-testid="stChatMessage"][data-testid="stChatMessage-user"] h2,
+    [data-testid="stChatMessage"][data-testid="stChatMessage-user"] h3 {
+        color: #ffffff !important;
     }
 
-    /* Assistant message styling: blurred glassmorphism */
+    /* Assistant message styling: soft gray, aligned left */
     [data-testid="stChatMessage"][data-testid="stChatMessage-assistant"] {
-        background-color: rgba(255, 255, 255, 0.8) !important;
-        border: 1px solid rgba(217, 119, 6, 0.06) !important;
-        backdrop-filter: blur(12px);
+        background-color: #f1f5f9 !important; /* Soft Slate/Grey */
+        border: 1px solid #e2e8f0 !important;
+        color: #0f172a !important;
+        margin-right: auto !important;
+        max-width: 85% !important;
+        border-radius: 18px 18px 18px 2px !important;
     }
     
     /* Center the app layout with a max-width */
