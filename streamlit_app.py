@@ -543,6 +543,22 @@ def update_usage_metrics(prompt_text, response_text, model_name):
     st.session_state.token_usage["output_tokens"] += output_tokens
     st.session_state.token_usage["total_cost"] += cost
 
+def format_sentences_with_newlines(text):
+    if not isinstance(text, str):
+        return text
+    
+    # If the text has markdown tables or code blocks or lists, splitting could corrupt them.
+    # So we skip splitting if it looks like structured markdown.
+    if "|" in text or "```" in text or "- " in text or "\n1. " in text or "\n- " in text:
+        return text
+        
+    import re
+    # Split sentences by punctuation (.!?), followed by space or end of string.
+    # Keep the punctuation using regex lookbehind.
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    valid_sentences = [s.strip() for s in sentences if s.strip()]
+    return "\n\n".join(valid_sentences)
+
 def run_llm_stream(provider, model, messages, temperature, max_tokens, api_key, ollama_url):
     system_msg = ""
     regular_msgs = []
@@ -756,10 +772,10 @@ with chat_box:
                     except Exception as e:
                         st.error(f"이미지 로딩 실패: {e}")
                 if text_content:
-                    st.markdown(text_content)
+                    st.markdown(format_sentences_with_newlines(text_content))
             else:
                 # Text-only content
-                st.markdown(msg["content"])
+                st.markdown(format_sentences_with_newlines(msg["content"]))
             
             # Audio playback button for Assistant responses (TTS-1)
             if msg["role"] == "assistant" and provider == "OpenAI" and api_key:
@@ -822,10 +838,10 @@ if st.session_state.generate_response and st.session_state.current_prompt:
                     for chunk in stream:
                         for char in chunk:
                             full_response += char
-                            response_placeholder.markdown(full_response + "▌")
+                            response_placeholder.markdown(format_sentences_with_newlines(full_response) + "▌")
                             time.sleep(0.02)
                         
-                    response_placeholder.markdown(full_response)
+                    response_placeholder.markdown(format_sentences_with_newlines(full_response))
                     
                     # Update Metrics
                     update_usage_metrics(
