@@ -839,7 +839,7 @@ if st.session_state.generate_response and st.session_state.current_prompt:
                         for char in chunk:
                             full_response += char
                             response_placeholder.markdown(format_sentences_with_newlines(full_response) + "▌")
-                            time.sleep(0.02)
+                            time.sleep(0.5)
                         
                     response_placeholder.markdown(format_sentences_with_newlines(full_response))
                     
