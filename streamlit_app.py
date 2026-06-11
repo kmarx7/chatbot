@@ -360,6 +360,7 @@ with settings_expander:
    - 활동을 답하면: "어떤 분위기나 감성을 좋아해?"(선호 분위기/취향)를 물어본다.
 3. 사용자가 장소 사진을 업로드한 경우, 질문 흐름과 상관없이 즉시 해당 사진 속 장소를 알려주거나 분석하고 찾아주면서 코스를 추천해줘.
 4. 사용자가 굳이 모든 질문에 대답하지 않고 바로 추천을 원하거나, 5가지 정보가 모두 모이면 최종 코스 설계를 진행해줘.
+5. **[매우 중요] 답변할 때는 가독성을 위해 반드시 한 문장이 끝날 때마다 줄바꿈(줄나눔)을 두 번(\n\n) 또는 한 번(\n) 해줘. 즉, 메신저 대화처럼 한 문장에 한 줄씩 나오도록 글을 작성해줘. 절대 긴 설명문단으로 뭉쳐서 한 번에 출력하지 마.**
 
 [답변 가이드라인 (최종 코스 추천 시)]
 1. 수집된 정보를 바탕으로 조건에 딱 맞는 힙하고 감각적인 하루 코스(카페, 식당, 소품샵, 팝업스토어, 미술관 전시 등)를 제안해줘.
@@ -811,9 +812,12 @@ if st.session_state.generate_response and st.session_state.current_prompt:
                         ollama_url=ollama_url_input
                     )
                     
+                    import time
                     for chunk in stream:
-                        full_response += chunk
-                        response_placeholder.markdown(full_response + "▌")
+                        for char in chunk:
+                            full_response += char
+                            response_placeholder.markdown(full_response + "▌")
+                            time.sleep(0.02)
                         
                     response_placeholder.markdown(full_response)
                     
