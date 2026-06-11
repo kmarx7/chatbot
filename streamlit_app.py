@@ -213,12 +213,8 @@ st.markdown("""
 # 2. SESSION STATE INITIALIZATION
 # ==========================================
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "assistant",
-            "content": "☕ 안녕! 난 **하루(Haru)**야. 너 이름은 뭐야? \n\n(혹시 궁금하거나 가고 싶은 곳의 사진이 있다면 아래 🖼️ 버튼을 눌러 나에게 보여줘! 바로 찾아줄게! 📸)"
-        }
-    ]
+    st.session_state.messages = []
+    st.session_state.generate_welcome = True
 if "token_usage" not in st.session_state:
     st.session_state.token_usage = {"input_tokens": 0, "output_tokens": 0, "total_cost": 0.0}
 if "last_audio_hash" not in st.session_state:
@@ -800,6 +796,23 @@ with chat_box:
 # ==========================================
 # 11. GENERATION RESPONSE & RERUN TRIGGER
 # ==========================================
+# If it is the first run, stream the welcome message letter-by-letter
+if st.session_state.get("generate_welcome", False):
+    st.session_state.generate_welcome = False
+    with chat_box:
+        with st.chat_message("assistant", avatar="☕"):
+            response_placeholder = st.empty()
+            welcome_text = "☕ 안녕! 난 **하루(Haru)**야. 너 이름은 뭐야? \n\n(혹시 궁금하거나 가고 싶은 곳의 사진이 있다면 아래 🖼️ 버튼을 눌러 나에게 보여줘! 바로 찾아줄게! 📸)"
+            full_response = ""
+            import time
+            for char in welcome_text:
+                full_response += char
+                response_placeholder.markdown(format_sentences_with_newlines(full_response) + "█")
+                time.sleep(0.5)
+            response_placeholder.markdown(format_sentences_with_newlines(welcome_text))
+            st.session_state.messages.append({"role": "assistant", "content": welcome_text})
+            st.rerun()
+
 # If we have a pending generation flag set, we stream the response inside the container
 if st.session_state.generate_response and st.session_state.current_prompt:
     prompt_text = st.session_state.current_prompt
@@ -838,7 +851,7 @@ if st.session_state.generate_response and st.session_state.current_prompt:
                     for chunk in stream:
                         for char in chunk:
                             full_response += char
-                            response_placeholder.markdown(format_sentences_with_newlines(full_response) + "▌")
+                            response_placeholder.markdown(format_sentences_with_newlines(full_response) + "█")
                             time.sleep(0.5)
                         
                     response_placeholder.markdown(format_sentences_with_newlines(full_response))
