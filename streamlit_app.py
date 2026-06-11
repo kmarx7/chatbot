@@ -262,7 +262,7 @@ header_col, settings_col = st.columns([3, 1.2])
 
 with header_col:
     st.markdown('<div class="main-header" style="text-align: left; font-size: 2.4rem; margin-top: 0.5rem; margin-bottom: 0.2rem;">✨ DayPlanner: 하루의 발견</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header" style="text-align: left; font-size: 1.05rem; margin-bottom: 1.5rem;">멋진 카페 투어, 문화 예술 전시, 숨겨진 로컬 핫플레이스를 설계해 보세요.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header" style="text-align: left; font-size: 1.05rem; margin-bottom: 1.5rem;">당신의 하루를 만들어 보세요.</div>', unsafe_allow_html=True)
 
 with settings_col:
     st.markdown('<div style="margin-top: 0.8rem;"></div>', unsafe_allow_html=True)  # Spacer
