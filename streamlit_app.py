@@ -392,9 +392,32 @@ def run_llm_stream(provider, model, messages, temperature, max_tokens, api_key, 
     if provider == "OpenAI":
         from openai import OpenAI
         client = OpenAI(api_key=api_key)
+        
+        # Translate to OpenAI content blocks if any message is multimodal
+        openai_messages = []
+        if system_msg:
+            openai_messages.append({"role": "system", "content": system_msg})
+            
+        for m in regular_msgs:
+            if isinstance(m["content"], list):
+                content_blocks = []
+                for part in m["content"]:
+                    if part["type"] == "text":
+                        content_blocks.append({"type": "text", "text": part["text"]})
+                    elif part["type"] == "image":
+                        content_blocks.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{part.get('mime', 'image/jpeg')};base64,{part['data']}"
+                            }
+                        })
+                openai_messages.append({"role": m["role"], "content": content_blocks})
+            else:
+                openai_messages.append({"role": m["role"], "content": m["content"]})
+                
         stream = client.chat.completions.create(
             model=model,
-            messages=messages,
+            messages=openai_messages,
             temperature=temperature,
             max_tokens=max_tokens,
             stream=True
@@ -411,8 +434,28 @@ def run_llm_stream(provider, model, messages, temperature, max_tokens, api_key, 
             st.error("anthropic 라이브러리가 로드되지 않았습니다.")
             return
         client = anthropic.Anthropic(api_key=api_key)
-        # Map roles
-        anth_msgs = [{"role": m["role"], "content": m["content"]} for m in regular_msgs]
+        
+        # Translate to Anthropic content blocks
+        anth_msgs = []
+        for m in regular_msgs:
+            if isinstance(m["content"], list):
+                content_blocks = []
+                for part in m["content"]:
+                    if part["type"] == "text":
+                        content_blocks.append({"type": "text", "text": part["text"]})
+                    elif part["type"] == "image":
+                        content_blocks.append({
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": part.get("mime", "image/jpeg"),
+                                "data": part["data"]
+                            }
+                        })
+                anth_msgs.append({"role": m["role"], "content": content_blocks})
+            else:
+                anth_msgs.append({"role": m["role"], "content": m["content"]})
+                
         with client.messages.stream(
             model=model,
             max_tokens=max_tokens,
@@ -431,11 +474,35 @@ def run_llm_stream(provider, model, messages, temperature, max_tokens, api_key, 
             st.error("google-generativeai 라이브러리가 로드되지 않았습니다.")
             return
         genai.configure(api_key=api_key)
-        # Map to Gemini format
+        
+        # Translate to Gemini format
+        import io
+        import base64
+        try:
+            from PIL import Image
+        except ImportError:
+            Image = None
+            
         gemini_msgs = []
         for m in regular_msgs:
             role = "user" if m["role"] == "user" else "model"
-            gemini_msgs.append({"role": role, "parts": [m["content"]]})
+            parts = []
+            
+            if isinstance(m["content"], list):
+                for part in m["content"]:
+                    if part["type"] == "text":
+                        parts.append(part["text"])
+                    elif part["type"] == "image":
+                        if Image:
+                            img_data = base64.b64decode(part["data"])
+                            img = Image.open(io.BytesIO(img_data))
+                            parts.append(img)
+                        else:
+                            parts.append("[이미지 데이터 - PIL 라이브러리 미설치]")
+            else:
+                parts.append(m["content"])
+                
+            gemini_msgs.append({"role": role, "parts": parts})
         
         model_client = genai.GenerativeModel(
             model_name=model,
@@ -456,9 +523,32 @@ def run_llm_stream(provider, model, messages, temperature, max_tokens, api_key, 
     elif provider == "Ollama (Local)":
         from openai import OpenAI
         client = OpenAI(api_key="ollama", base_url=f"{ollama_url}/v1")
+        
+        # Ollama compatible with OpenAI content blocks
+        ollama_messages = []
+        if system_msg:
+            ollama_messages.append({"role": "system", "content": system_msg})
+            
+        for m in regular_msgs:
+            if isinstance(m["content"], list):
+                content_blocks = []
+                for part in m["content"]:
+                    if part["type"] == "text":
+                        content_blocks.append({"type": "text", "text": part["text"]})
+                    elif part["type"] == "image":
+                        content_blocks.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{part.get('mime', 'image/jpeg')};base64,{part['data']}"
+                            }
+                        })
+                ollama_messages.append({"role": m["role"], "content": content_blocks})
+            else:
+                ollama_messages.append({"role": m["role"], "content": m["content"]})
+                
         stream = client.chat.completions.create(
             model=model,
-            messages=messages,
+            messages=ollama_messages,
             temperature=temperature,
             max_tokens=max_tokens,
             stream=True
@@ -481,7 +571,29 @@ with chat_box:
     for idx, msg in enumerate(st.session_state.messages):
         avatar = "👤" if msg["role"] == "user" else "☕"
         with st.chat_message(msg["role"], avatar=avatar):
-            st.markdown(msg["content"])
+            if isinstance(msg["content"], list):
+                # Multimodal content block
+                text_content = ""
+                image_data = None
+                for part in msg["content"]:
+                    if part["type"] == "text":
+                        text_content = part["text"]
+                    elif part["type"] == "image":
+                        image_data = part["data"]
+                
+                if image_data:
+                    # Decode base64 image and display it
+                    import base64
+                    try:
+                        img_bytes = base64.b64decode(image_data)
+                        st.image(img_bytes, width=280, caption="업로드된 이미지")
+                    except Exception as e:
+                        st.error(f"이미지 로딩 실패: {e}")
+                if text_content:
+                    st.markdown(text_content)
+            else:
+                # Text-only content
+                st.markdown(msg["content"])
             
             # Audio playback button for Assistant responses (TTS-1)
             if msg["role"] == "assistant" and provider == "OpenAI" and api_key:
@@ -490,10 +602,14 @@ with chat_box:
                         try:
                             from openai import OpenAI
                             tts_client = OpenAI(api_key=api_key)
+                            speech_text = msg["content"]
+                            if isinstance(speech_text, list):
+                                speech_text = next((part["text"] for part in speech_text if part["type"] == "text"), "")
+                                
                             speech = tts_client.audio.speech.create(
                                 model="tts-1",
                                 voice="alloy",
-                                input=msg["content"][:500]  # Limit to 500 characters
+                                input=speech_text[:500]  # Limit to 500 characters
                             )
                             st.audio(speech.read(), format="audio/mp3", autoplay=True)
                         except Exception as e:
@@ -544,7 +660,7 @@ if st.session_state.generate_response and st.session_state.current_prompt:
                     
                     # Update Metrics
                     update_usage_metrics(
-                        prompt_text=prompt_text + system_prompt,
+                        prompt_text=prompt_text,
                         response_text=full_response,
                         model_name=model
                     )
@@ -561,32 +677,79 @@ if st.session_state.generate_response and st.session_state.current_prompt:
 # ==========================================
 user_prompt = None
 
-# Initialize session state for text input value if not present
+# Initialize session state variables if not present
 if "user_text_input" not in st.session_state:
     st.session_state.user_text_input = ""
+if "pending_photo" not in st.session_state:
+    st.session_state.pending_photo = None
+if "pending_photo_mime" not in st.session_state:
+    st.session_state.pending_photo_mime = None
+if "temp_prompt" not in st.session_state:
+    st.session_state.temp_prompt = None
+
+# Callbacks for submit
+def on_btn_submit():
+    val = st.session_state.get("text_input_key", "").strip()
+    if val or st.session_state.get("pending_photo") is not None:
+        st.session_state.temp_prompt = val
+        st.session_state.text_input_key = ""
+
+def on_text_submit():
+    val = st.session_state.get("text_input_key", "").strip()
+    if val:
+        st.session_state.temp_prompt = val
+        st.session_state.text_input_key = ""
 
 st.markdown("---")
 st.markdown("💬 **로망에게 질문하기**")
 
-# Text bar layout with columns: text_input (5), voice_btn (0.8), submit_btn (1.2)
-col1, col2, col3 = st.columns([5, 0.8, 1.2])
+# Text bar layout with columns: text_input (5), photo_btn (0.8), voice_btn (0.8), submit_btn (1.2)
+col1, col2, col3, col4 = st.columns([5, 0.8, 0.8, 1.2])
 with col1:
     input_val = st.text_input(
         "메시지 입력",
-        placeholder="원하는 기분, 장소, 동행인을 자유롭게 질문해 보세요...",
+        placeholder="원하는 기분, 장소, 동행인을 질문하거나 사진을 업로드해 보세요...",
         label_visibility="collapsed",
-        key="text_input_key"
+        key="text_input_key",
+        on_change=on_text_submit
     )
 with col2:
+    photo_btn_label = "❌" if st.session_state.get("show_photo_uploader", False) else "🖼️"
+    photo_clicked = st.button(photo_btn_label, use_container_width=True, help="사진 업로드 켜기/끄기")
+with col3:
     voice_btn_label = "❌" if st.session_state.get("show_voice_recorder", False) else "🎙️"
     voice_clicked = st.button(voice_btn_label, use_container_width=True, help="음성 입력 켜기/끄기")
-with col3:
-    submit_clicked = st.button("전송", use_container_width=True)
+with col4:
+    st.button("전송", use_container_width=True, on_click=on_btn_submit)
+
+# Toggle photo uploader visibility
+if photo_clicked:
+    st.session_state.show_photo_uploader = not st.session_state.get("show_photo_uploader", False)
+    st.session_state.show_voice_recorder = False
+    st.rerun()
 
 # Toggle voice recorder visibility
 if voice_clicked:
     st.session_state.show_voice_recorder = not st.session_state.get("show_voice_recorder", False)
+    st.session_state.show_photo_uploader = False
     st.rerun()
+
+# Display photo uploader below the bar if enabled
+if st.session_state.get("show_photo_uploader", False):
+    st.markdown("🖼️ **장소 사진 올리기**")
+    uploaded_photo = st.file_uploader(
+        "여기에 이미지를 드래그하거나 클릭하여 업로드해 주세요 (PNG, JPG, JPEG)",
+        type=["png", "jpg", "jpeg"],
+        label_visibility="collapsed"
+    )
+    if uploaded_photo:
+        st.session_state.pending_photo = uploaded_photo.read()
+        st.session_state.pending_photo_mime = uploaded_photo.type
+        st.image(st.session_state.pending_photo, caption="업로드된 이미지 미리보기", width=250)
+        if st.button("❌ 사진 삭제", key="clear_photo"):
+            st.session_state.pending_photo = None
+            st.session_state.pending_photo_mime = None
+            st.rerun()
 
 # Display voice recorder below the bar if enabled
 if st.session_state.get("show_voice_recorder", False):
@@ -614,19 +777,48 @@ if st.session_state.get("show_voice_recorder", False):
             else:
                 st.warning("음성 인식을 하려면 프로바이더를 OpenAI로 선택하고 API Key를 등록해야 합니다.")
 
-# Check for text send click
-if submit_clicked and input_val:
-    user_prompt = input_val
-    st.session_state.text_input_key = ""
+# Check for temp_prompt from callback
+if st.session_state.get("temp_prompt") is not None:
+    user_prompt = st.session_state.temp_prompt
+    st.session_state.temp_prompt = None
 
 # Check for starter prompt selection
 if "starter_prompt" in st.session_state and st.session_state.starter_prompt:
     user_prompt = st.session_state.starter_prompt
     st.session_state.starter_prompt = None
 
-# Process user prompt
-if user_prompt:
-    st.session_state.messages.append({"role": "user", "content": user_prompt})
-    st.session_state.current_prompt = user_prompt
-    st.session_state.generate_response = True
-    st.rerun()
+# Process user prompt (convert to multimodal if photo is present)
+if user_prompt is not None or st.session_state.pending_photo is not None:
+    # Handle pending photo conversions
+    if st.session_state.pending_photo is not None:
+        import base64
+        img_base64 = base64.b64encode(st.session_state.pending_photo).decode("utf-8")
+        mime_type = st.session_state.pending_photo_mime or "image/jpeg"
+        
+        text_prompt = user_prompt if user_prompt else "이 사진 속 장소가 어디인지 찾아서 이름과 주소를 말해줘. 그리고 이 주변 지역에서 보낼 수 있는 완벽한 하루 코스(카페, 문화생활, 명소 등)를 정성껏 추천해줘!"
+        
+        # Structure multimodal content block
+        user_prompt = [
+            {"type": "text", "text": text_prompt},
+            {"type": "image", "data": img_base64, "mime": mime_type}
+        ]
+        
+        # Reset pending photo states
+        st.session_state.pending_photo = None
+        st.session_state.pending_photo_mime = None
+        st.session_state.show_photo_uploader = False
+
+    # Prevent sending image to text-only model
+    is_multimodal = False
+    if isinstance(user_prompt, list):
+        for part in user_prompt:
+            if part["type"] == "image":
+                is_multimodal = True
+                
+    if is_multimodal and model == "gpt-3.5-turbo":
+        st.error("현재 선택된 모델(gpt-3.5-turbo)은 이미지 분석을 지원하지 않습니다. 설정에서 gpt-4o, Claude 또는 Gemini 모델로 변경해 주세요.")
+    else:
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
+        st.session_state.current_prompt = user_prompt
+        st.session_state.generate_response = True
+        st.rerun()
