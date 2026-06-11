@@ -93,9 +93,15 @@ st.markdown("""
         color: white !important;
         margin-left: auto !important;
         max-width: 75% !important;
-        flex-direction: row-reverse !important;
         border-radius: 20px 20px 4px 20px !important;
         box-shadow: 0 4px 15px rgba(255, 0, 123, 0.15) !important;
+    }
+    
+    /* Hide user chat avatar to match messenger style DMs */
+    [data-testid="stChatMessage-user"] [data-testid="stChatMessageAvatar"],
+    [data-testid="stChatMessage-user"] [data-testid="chat-message-avatar"],
+    [data-testid="stChatMessage-user"] > div:first-child {
+        display: none !important;
     }
     
     /* Force user message text elements to be white */
