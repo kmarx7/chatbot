@@ -399,6 +399,77 @@ with settings_expander:
 # ==========================================
 # 8. STREAMING CHAT COMPLETIONS FUNCTION
 # ==========================================
+def update_usage_metrics(prompt_text, response_text, model_name):
+    # Determine the number of input tokens
+    input_tokens = 0
+    
+    # Extract text from prompt
+    text_content = ""
+    image_count = 0
+    if isinstance(prompt_text, list):
+        for part in prompt_text:
+            if part.get("type") == "text":
+                text_content += part.get("text", "")
+            elif part.get("type") == "image":
+                image_count += 1
+    else:
+        text_content = str(prompt_text)
+        
+    # Count input tokens
+    if tiktoken and ("gpt" in model_name or "text-davinci" in model_name):
+        try:
+            encoding = tiktoken.encoding_for_model(model_name)
+            input_tokens = len(encoding.encode(text_content))
+        except Exception:
+            input_tokens = len(text_content) // 2
+    else:
+        # Simple fallback estimate: 1 token per 2 characters on average
+        input_tokens = len(text_content) // 2
+        
+    # Standard image token estimation (e.g. 258 tokens for GPT-4o detail=low)
+    input_tokens += image_count * 258
+
+    # Count output tokens
+    output_tokens = 0
+    if tiktoken and ("gpt" in model_name or "text-davinci" in model_name):
+        try:
+            encoding = tiktoken.encoding_for_model(model_name)
+            output_tokens = len(encoding.encode(response_text))
+        except Exception:
+            output_tokens = len(response_text) // 2
+    else:
+        output_tokens = len(response_text) // 2
+
+    # Calculate costs
+    # Rates per 1M tokens: (input_rate, output_rate)
+    rates = {
+        "gpt-4o": (5.00, 15.00),
+        "gpt-4o-mini": (0.15, 0.60),
+        "gpt-4-turbo": (10.00, 30.00),
+        "gpt-3.5-turbo": (0.50, 1.50),
+        "claude-3-5-sonnet-latest": (3.00, 15.00),
+        "claude-3-opus-latest": (15.00, 75.00),
+        "claude-3-haiku-20240307": (0.25, 1.25),
+        "gemini-2.5-flash": (0.075, 0.30),
+        "gemini-2.5-pro": (1.25, 5.00),
+        "gemini-1.5-flash": (0.075, 0.30),
+        "gemini-1.5-pro": (1.25, 5.00),
+    }
+
+    # Fallback/wildcard matching for rates
+    input_rate, output_rate = 0.0, 0.0
+    for key, val in rates.items():
+        if key in model_name.lower():
+            input_rate, output_rate = val
+            break
+
+    cost = ((input_tokens * input_rate) + (output_tokens * output_rate)) / 1_000_000.0
+
+    # Save to session state
+    st.session_state.token_usage["input_tokens"] += input_tokens
+    st.session_state.token_usage["output_tokens"] += output_tokens
+    st.session_state.token_usage["total_cost"] += cost
+
 def run_llm_stream(provider, model, messages, temperature, max_tokens, api_key, ollama_url):
     system_msg = ""
     regular_msgs = []
